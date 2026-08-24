@@ -5,8 +5,11 @@ namespace DinoHunt.View
 {
     /// <summary>
     /// Free-fly spectator camera (GDD §12.4 "free-fly"). Lets the observer roam the battlefield:
-    /// WASD pans on the ground plane, Q/E drop/raise, hold right mouse to look around, scroll to
-    /// dolly in/out, Shift to move faster. The first input hands control off from the auto-framing
+    /// WASD pans on the ground plane, Q/E drop/raise, hold left OR right mouse to look around,
+    /// scroll to dolly in/out, Shift to move faster. Left-drag is accepted alongside right-drag
+    /// because this is a pure spectator view with no click interactions, and a laptop trackpad
+    /// (notably on macOS) has no sustained right-button drag. The first input hands control off
+    /// from the auto-framing
     /// SpectatorCamera. Pure view code — it uses Time.deltaTime freely and never touches the sim.
     ///
     /// Uses the Input System low-level API (Keyboard/Mouse.current) since the project is configured
@@ -62,7 +65,9 @@ namespace DinoHunt.View
             if (kb.eKey.isPressed) vertical += 1f;
             if (kb.qKey.isPressed) vertical -= 1f;
 
-            bool looking = mouse != null && mouse.rightButton.isPressed;
+            // Left OR right button drags the view. Trackpads (macOS especially) can't hold a
+            // right-button drag, and there is nothing to click in a spectator view, so left works too.
+            bool looking = mouse != null && (mouse.rightButton.isPressed || mouse.leftButton.isPressed);
             Vector2 lookDelta = looking ? mouse.delta.ReadValue() : Vector2.zero;
             float scroll = mouse != null ? mouse.scroll.ReadValue().y : 0f;
 

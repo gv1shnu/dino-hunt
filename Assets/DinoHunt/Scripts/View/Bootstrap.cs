@@ -68,8 +68,17 @@ namespace DinoHunt.View
             // and the waypoints must match the geometry that was actually built.
             var points = ArenaGeometry.MakePoints(arena.ResolvedLayout);
 
+            // Disk logging is a desktop/editor concern. On a WebGL build the Emscripten
+            // filesystem is in-memory and never synced back to the browser, so a per-event
+            // log would only burn memory writing a file the player can never retrieve. Skip
+            // it there; the live narrator below still receives every event for commentary.
+#if UNITY_WEBGL && !UNITY_EDITOR
+            _logSink = null;
+            _snapshotSink = null;
+#else
             _logSink = CreateLogSink(config.seed, "jsonl");
             _snapshotSink = config.logStateSnapshots ? CreateLogSink(config.seed, "snapshots.csv") : null;
+#endif
             _narrator = new MatchNarrator();
             var eventSink = new MultiSink(_logSink, _narrator); // file log + live radio/commentary
             Simulation = new Simulation(config, points, new NavMeshPathfinder(), new RaycastLineOfSight(), eventSink, _snapshotSink);
@@ -96,7 +105,8 @@ namespace DinoHunt.View
             Debug.Log($"[DinoHunt] Match started. seed={config.seed} dt={config.fixedDeltaTime:F5} " +
                       $"teamSize={config.teamSize} agents={Simulation.Agents.Count} " +
                       $"eggs={config.eggCount} timer={config.matchTimerSeconds}s");
-            Debug.Log($"[DinoHunt] Event log: {_logSink.Path}");
+            if (_logSink != null)
+                Debug.Log($"[DinoHunt] Event log: {_logSink.Path}");
             if (_snapshotSink != null)
                 Debug.Log($"[DinoHunt] Training snapshots: {_snapshotSink.Path}");
         }

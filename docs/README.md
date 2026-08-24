@@ -37,7 +37,7 @@ mostly art, replay, and running the experiments.
 | Combat, finite ammo, sidearm floor | Corpse looting for ammo |
 | Event log (JSONL) — the spine | Auto-director camera |
 | Eggs, carry penalty, delivery, heal-on-deliver | Roster persistence between sessions |
-| Raptors: chase, leash, screech, **killable**, **pack encirclement** | Web distribution |
+| Raptors: chase, leash, screech, **killable**, **pack encirclement** | Web distribution *(WebGL build configured for itch.io; not yet published)* |
 | Utility AI — 11 actions | |
 | Perception: FOV, line of sight, sound alerts | |
 | **Radio as a two-way coordination mechanism** | |
