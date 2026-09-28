@@ -12,7 +12,7 @@ namespace DinoHunt.Sim
     ///
     /// Movement is path-based: the sim asks a pathfinder for corner points and walks the
     /// agent along them at a fixed speed each step. NavMeshAgent is deliberately not used,
-    /// so movement stays deterministic (GDD/CLAUDE non-negotiable).
+    /// so movement stays deterministic (GDD requirement).
     /// </summary>
     public sealed class Agent
     {
