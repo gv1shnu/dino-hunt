@@ -6,6 +6,7 @@ using DinoHunt.Core;
 using DinoHunt.Logging;
 using DinoHunt.Sim;
 using Unity.AI.Navigation;
+using UnityEngine.AI;
 using UnityEngine;
 
 namespace DinoHunt.View
@@ -44,6 +45,9 @@ namespace DinoHunt.View
         [SerializeField] private Color blueTeamTint = new Color(0.25f, 0.5f, 1f);
         [SerializeField] private Color redTeamTint = new Color(1f, 0.3f, 0.28f);
 
+        [Tooltip("NavMesh wall clearance (agent radius) in world units. Keeps paths far enough from cover that the soldier and raptor models don't clip into it.")]
+        [SerializeField] private float navClearance = 4f;
+
         [Tooltip("Seconds between commentary situation reports. Keeps the audience oriented during quiet stretches; 0 disables.")]
         [SerializeField] private float commentaryReportInterval = 20f;
 
@@ -72,7 +76,7 @@ namespace DinoHunt.View
 
             var arena = new ArenaBuilder(layout);
             arena.Build(config.seed);
-            BakeNavMesh(arena.Root);
+            int navAgentType = BakeNavMesh(arena.Root);
 
             // Use the RESOLVED layout — procedural variation may have changed the arena for this seed,
             // and the waypoints must match the geometry that was actually built.
@@ -91,7 +95,7 @@ namespace DinoHunt.View
 #endif
             _narrator = new MatchNarrator();
             var eventSink = new MultiSink(_logSink, _narrator); // file log + live radio/commentary
-            Simulation = new Simulation(config, points, new NavMeshPathfinder(), new RaycastLineOfSight(), eventSink, _snapshotSink);
+            Simulation = new Simulation(config, points, new NavMeshPathfinder(navClearance * 2f, navAgentType), new RaycastLineOfSight(), eventSink, _snapshotSink);
             Simulation.ShotFired += OnShotFired;
             if (soldierModel.HasModel || raptorModel.HasModel) EnsureModelLighting();
             SpawnAgentViews();
@@ -213,9 +217,13 @@ namespace DinoHunt.View
                     continue;
                 }
 
+                // Face the direction of travel while walking a path around cover (sim Facing points
+                // at the prey, which would make the model slide sideways round corners).
+                Vector3 step = raptor.Position - view.position; step.y = 0f;
+                Vector3 look = step.sqrMagnitude > 1e-4f ? step : raptor.Facing;
                 view.position = raptor.Position;
-                if (raptor.Facing.sqrMagnitude > 1e-6f)
-                    view.rotation = Quaternion.LookRotation(raptor.Facing);
+                if (look.sqrMagnitude > 1e-6f)
+                    view.rotation = Quaternion.Slerp(view.rotation, Quaternion.LookRotation(look), 1f - Mathf.Exp(-10f * Time.deltaTime));
 
                 // A jump in attack cooldown means the raptor just struck.
                 float cd = raptor.AttackCooldown;
@@ -264,14 +272,24 @@ namespace DinoHunt.View
             return new JsonlFileSink(Path.Combine(dir, file));
         }
 
-        private void BakeNavMesh(Transform arenaRoot)
+        private int BakeNavMesh(Transform arenaRoot)
         {
             // Runtime bake: the arena is procedural, so there is no pre-baked scene NavMesh.
+            // A dedicated agent type sets the wall clearance: the default 0.5 radius let routes hug
+            // cover so closely that the soldier and raptor models clipped into the blocks.
+            var settings = NavMesh.CreateSettings();
+            settings.agentRadius = navClearance;
+            settings.agentHeight = 2f;
+            settings.agentClimb = 0.75f;
+            settings.agentSlope = 45f;
+
             var surfaceGo = new GameObject("NavMeshSurface");
             surfaceGo.transform.SetParent(arenaRoot, false);
             var surface = surfaceGo.AddComponent<NavMeshSurface>();
+            surface.agentTypeID = settings.agentTypeID;
             surface.collectObjects = CollectObjects.All;
             surface.BuildNavMesh();
+            return settings.agentTypeID;
         }
 
         /// <summary>

@@ -131,7 +131,35 @@ namespace DinoHunt.Arena
                        l.nestRadius + l.nestScatterBand.y,
                        buildingPaletteSize, ref rng);
 
+            // Placement is by block centre, so a wide block could reach into the nest (where raptors
+            // spawn and idle) or a base (where agents spawn) and bury units inside it. Drop those.
+            // Filtering after generation leaves the RNG call order, and so every seed, untouched.
+            boxes.RemoveAll(b => IntrudesClearZone(b, l));
+
             return boxes;
+        }
+
+        /// <summary>Clearance kept around the nest centre: raptor spawn ring (nestRadius) plus a
+        /// raptor's half body length, so idle raptors never sit inside a block.</summary>
+        private const float NestClearMargin = 12f;
+        /// <summary>Clearance kept around each base footprint, where agents spawn.</summary>
+        private const float BaseClearMargin = 10f;
+
+        private static bool IntrudesClearZone(ArenaBox b, ArenaLayout l)
+        {
+            float hx = b.Size.x * 0.5f, hz = b.Size.z * 0.5f;
+
+            // Nest disc vs block footprint: closest footprint point to the nest centre.
+            float cx = Mathf.Clamp(NestCenter.x, b.Center.x - hx, b.Center.x + hx);
+            float cz = Mathf.Clamp(NestCenter.z, b.Center.z - hz, b.Center.z + hz);
+            float nestClear = l.nestRadius + NestClearMargin;
+            if (cx * cx + cz * cz < nestClear * nestClear) return true;
+
+            // Base rectangles (mirrored on ±X) inflated by the margin.
+            float bhx = l.baseSize.x * 0.5f + BaseClearMargin;
+            float bhz = l.baseSize.y * 0.5f + BaseClearMargin;
+            return Mathf.Abs(Mathf.Abs(b.Center.x) - l.nestToBaseDistance) < hx + bhx
+                && Mathf.Abs(b.Center.z) < hz + bhz;
         }
 
         // Cover is spaced evenly along a route and MIRRORED across the centre line. Map symmetry is

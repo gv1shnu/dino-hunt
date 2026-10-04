@@ -674,12 +674,40 @@ namespace DinoHunt.Core
 
         private void MoveRaptor(Raptor r, Vector3 dest)
         {
-            Vector3 to = dest - r.Position; to.y = 0f;
-            float d = to.magnitude;
-            if (d < 1e-4f) return;
+            Vector3 flat = dest - r.Position; flat.y = 0f;
+            if (flat.sqrMagnitude < 1e-8f) return;
+
+            // Route around cover like agents do. Repath only when the goal has moved enough
+            // (hunting goals track moving prey) or the current path is used up.
+            if (!r.HasPath || (r.Destination - dest).sqrMagnitude > 9f)
+            {
+                r.Destination = dest;
+                r.Path.Clear();
+                r.PathIndex = 0;
+                if (_pathfinder == null || !_pathfinder.TryFindPath(r.Position, dest, r.Path))
+                    r.Path.Add(dest); // fallback: straight line
+            }
 
             float budget = Config.raptorSpeed * Config.fixedDeltaTime;
-            Vector3 next = r.Position + (d <= budget ? to : to / d * budget);
+            Vector3 next = r.Position;
+            int guard = r.Path.Count + 1;
+            while (budget > 0f && r.HasPath && guard-- > 0)
+            {
+                Vector3 target = r.Path[r.PathIndex];
+                Vector3 to = target - next; to.y = 0f;
+                float dist = to.magnitude;
+                if (dist <= budget)
+                {
+                    next = new Vector3(target.x, next.y, target.z);
+                    budget -= dist;
+                    r.PathIndex++;
+                }
+                else
+                {
+                    next += (to / dist) * budget;
+                    budget = 0f;
+                }
+            }
 
             // Clamp to the leash sphere around the nest.
             Vector3 fromNest = next - _points.Nest; fromNest.y = 0f;

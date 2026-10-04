@@ -282,16 +282,16 @@ MonoBehaviour:
     nestRadius: 16
     baseSize: {x: 28, y: 38}
     flankRouteOffset: 84
-    flankCoverCount: 8
+    flankCoverCount: 6
     midCoverCount: 3
     coverSizeRange: {x: 16, y: 30}
     blockHeight: 10
-    structureCountPerHalf: 45
+    structureCountPerHalf: 26
     structureSizeRange: {x: 16, y: 48}
     structureHeightRange: {x: 10, y: 44}
     proceduralVariation: 0
     variationAmount: 0.35
-    nestScatterCount: 14
+    nestScatterCount: 8
     nestScatterBand: {x: 8, y: 70}
   agentVisualScale: 7.5
   eggVisualScale: 1.8

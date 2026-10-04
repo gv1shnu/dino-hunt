@@ -33,7 +33,7 @@ namespace DinoHunt.Arena
         public float flankRouteOffset = 84f;
 
         [Tooltip("Cover blocks per HALF of each flank route (mirrored to the other half). Heavy cover.")]
-        public int flankCoverCount = 8;
+        public int flankCoverCount = 6;
 
         [Tooltip("Cover blocks per HALF of the mid route (mirrored). Sparse / exposed sniping lane.")]
         public int midCoverCount = 3;
@@ -46,7 +46,7 @@ namespace DinoHunt.Arena
 
         [Header("Scatter structures (light mini-open-world greybox)")]
         [Tooltip("Abandoned-building blocks per HALF of the field (mirrored to the other half for symmetry). Deterministic from the match seed. Dense = more repositioning in fights.")]
-        public int structureCountPerHalf = 45;
+        public int structureCountPerHalf = 26;
 
         [Tooltip("Footprint size range for scattered structures (x = min, y = max).")]
         public Vector2 structureSizeRange = new Vector2(16f, 48f);
@@ -63,7 +63,7 @@ namespace DinoHunt.Arena
 
         [Header("Nest scatter (ruins ringing the danger zone)")]
         [Tooltip("Extra structures scattered in a band just outside the nest, per HALF (mirrored). Reuses structureSizeRange/structureHeightRange.")]
-        public int nestScatterCount = 14;
+        public int nestScatterCount = 8;
 
         [Tooltip("Distance band for nest-scatter structures, measured out from the nest edge (x = min, y = max).")]
         public Vector2 nestScatterBand = new Vector2(8f, 70f);

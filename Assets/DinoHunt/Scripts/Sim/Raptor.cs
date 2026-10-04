@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using DinoHunt.Core;
 using UnityEngine;
 
@@ -41,6 +42,13 @@ namespace DinoHunt.Sim
 
         /// <summary>True once this raptor has stopped circling and charged.</summary>
         public bool Committed;
+
+        /// <summary>Current movement goal and the pathfinder corners leading to it. Raptors route
+        /// around cover like agents do instead of walking straight through it.</summary>
+        public Vector3 Destination;
+        public readonly List<Vector3> Path = new List<Vector3>();
+        public int PathIndex;
+        public bool HasPath => PathIndex < Path.Count;
 
         /// <summary>Independent deterministic stream, forked from the match seed at spawn.</summary>
         public DeterministicRandom Rng;
