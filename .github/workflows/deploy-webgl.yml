@@ -3,7 +3,7 @@
 #
 # One-time setup:
 #   - Repo Settings -> Pages -> Source: "GitHub Actions".
-#   - Repo secrets UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD (see https://game.ci/docs/github/activation).
+#   - Repo secrets UNITY_EMAIL, UNITY_PASSWORD (Unity Personal account; activated per run).
 #
 # The build relies on the WebGL "Decompression Fallback" player setting (already enabled):
 # Pages can't send Content-Encoding headers for the Brotli files, so the loader decompresses them itself.
@@ -51,10 +51,11 @@ jobs:
           restore-keys: |
             Library-WebGL-
 
+      # Personal license activated through the Unity account. A Personal .ulf is bound to the
+      # machine that created it, so passing UNITY_LICENSE fails on every fresh runner.
       - name: Build
         uses: game-ci/unity-builder@v6
         env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
