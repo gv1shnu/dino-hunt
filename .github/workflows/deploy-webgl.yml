@@ -1,0 +1,80 @@
+# Builds the WebGL player on every push to master and publishes it to GitHub Pages
+# at http://www.vishnugandarapu.in/dino-hunt/ (the account's custom Pages domain).
+#
+# One-time setup:
+#   - Repo Settings -> Pages -> Source: "GitHub Actions".
+#   - Repo secrets UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD (see https://game.ci/docs/github/activation).
+#
+# The build relies on the WebGL "Decompression Fallback" player setting (already enabled):
+# Pages can't send Content-Encoding headers for the Brotli files, so the loader decompresses them itself.
+name: Deploy WebGL to GitHub Pages
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once; a newer push supersedes an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build WebGL
+    runs-on: ubuntu-latest
+    steps:
+      # The Unity editor image is several GB; reclaim runner disk space first.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v2.0.0
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: false
+          swap-storage: false
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # Caching Library/ turns a full asset reimport (the slowest part) into an incremental one.
+      - name: Cache Library
+        uses: actions/cache@v6
+        with:
+          path: Library
+          key: Library-WebGL-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-WebGL-
+
+      - name: Build
+        uses: game-ci/unity-builder@v6
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: WebGL
+          buildName: DinoHunt
+          versioning: None
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: build/WebGL/DinoHunt
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v5
