@@ -41,6 +41,7 @@ namespace DinoHunt.View
                 fontSize = 12,
                 fontStyle = FontStyle.Bold
             };
+            GuiScale.Apply();
 
             for (int i = 0; i < _agents.Count; i++)
             {
@@ -55,7 +56,8 @@ namespace DinoHunt.View
                     ? new Color(0.65f, 0.82f, 1f)
                     : new Color(1f, 0.72f, 0.62f);
 
-                var rect = new Rect(screen.x - 120f, Screen.height - screen.y - 22f, 240f, 20f);
+                Vector2 gp = GuiScale.FromScreen(screen);
+                var rect = new Rect(gp.x - 150f, gp.y - 22f, 300f, 20f);
                 string who = string.IsNullOrEmpty(agent.Name) ? "#" + agent.Id : agent.Name;
                 GUI.Label(rect, $"{who} [{Mathf.CeilToInt(agent.Health)}] {AmmoLabel(agent.Weapon)}  {agent.Intent}", _style);
             }
@@ -74,7 +76,8 @@ namespace DinoHunt.View
                     : raptor.State == RaptorState.Returning ? "returning" : "prowling";
 
                 _style.normal.textColor = new Color(0.7f, 0.85f, 0.4f);
-                var rect = new Rect(screen.x - 120f, Screen.height - screen.y - 22f, 240f, 20f);
+                Vector2 gp = GuiScale.FromScreen(screen);
+                var rect = new Rect(gp.x - 150f, gp.y - 22f, 300f, 20f);
                 GUI.Label(rect, $"raptor [{Mathf.CeilToInt(raptor.Health)}]: {state}", _style);
             }
         }

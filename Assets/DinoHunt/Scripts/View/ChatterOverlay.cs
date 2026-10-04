@@ -37,27 +37,29 @@ namespace DinoHunt.View
 
         private static GUIStyle Panel(Color color, TextAnchor anchor) => new GUIStyle
         {
-            fontSize = 10,
+            fontSize = 13,
             wordWrap = true,
             alignment = anchor,
             normal = { textColor = color },
-            padding = new RectOffset(5, 5, 4, 4)
+            padding = new RectOffset(7, 7, 5, 5)
         };
 
         private void OnGUI()
         {
             if (_narrator == null) return;
             EnsureStyles();
+            GuiScale.Apply();
+            float sw = GuiScale.Width, sh = GuiScale.Height;
 
-            const float w = 170f, h = 95f, m = 12f;
+            const float w = 270f, h = 140f, m = 12f;
 
             DrawPanel(new Rect(m, m, w, h), "BLUE RADIO", _narrator.BlueRadio, _blueStyle,
                 new Color(0.15f, 0.22f, 0.35f, 0.55f), ref _blueLastSeen, ref _blueAnimStart);
-            DrawPanel(new Rect(Screen.width - w - m, m, w, h), "RED RADIO", _narrator.RedRadio, _redStyle,
+            DrawPanel(new Rect(sw - w - m, m, w, h), "RED RADIO", _narrator.RedRadio, _redStyle,
                 new Color(0.32f, 0.16f, 0.16f, 0.55f), ref _redLastSeen, ref _redAnimStart);
 
-            float cw = 280f, ch = 65f;
-            DrawPanel(new Rect((Screen.width - cw) * 0.5f, Screen.height - ch - m, cw, ch), "COMMENTARY", _narrator.Commentary,
+            float cw = 460f, ch = 95f;
+            DrawPanel(new Rect((sw - cw) * 0.5f, sh - ch - m, cw, ch), "COMMENTARY", _narrator.Commentary,
                 _commentaryStyle, new Color(0.12f, 0.12f, 0.10f, 0.6f), ref _commentaryLastSeen, ref _commentaryAnimStart);
         }
 
@@ -69,7 +71,7 @@ namespace DinoHunt.View
             GUI.DrawTexture(rect, Texture2D.whiteTexture);
             GUI.color = prev;
 
-            var titleRect = new Rect(rect.x, rect.y, rect.width, 15f);
+            var titleRect = new Rect(rect.x, rect.y, rect.width, 20f);
             _headerStyle.alignment = style.alignment == TextAnchor.UpperRight ? TextAnchor.UpperRight : TextAnchor.UpperLeft;
             _headerStyle.normal.textColor = style.normal.textColor;
             GUI.Label(titleRect, title, _headerStyle);
@@ -91,7 +93,7 @@ namespace DinoHunt.View
             var body = new StringBuilder();
             for (int i = lines.Count - 1; i >= 0; i--) body.Append(lines[i]).Append('\n');
 
-            var bodyRect = new Rect(rect.x, rect.y + 17f, rect.width, rect.height - 20f);
+            var bodyRect = new Rect(rect.x, rect.y + 20f, rect.width, rect.height - 23f);
             GUI.BeginGroup(bodyRect);
             var innerRect = new Rect(0f, offsetY, bodyRect.width, bodyRect.height + SlideDistance);
             GUI.Label(innerRect, body.ToString(), style);

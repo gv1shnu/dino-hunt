@@ -61,9 +61,10 @@ namespace DinoHunt.View
             if (r == null) return;
 
             EnsureStyles();
+            GuiScale.Apply();
 
             const float w = 720f, h = 420f;
-            var panel = new Rect((Screen.width - w) * 0.5f, (Screen.height - h) * 0.5f, w, h);
+            var panel = new Rect((GuiScale.Width - w) * 0.5f, (GuiScale.Height - h) * 0.5f, w, h);
 
             var prev = GUI.color;
             GUI.color = new Color(0.06f, 0.07f, 0.09f, 0.93f);
