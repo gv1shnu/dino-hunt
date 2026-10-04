@@ -22,8 +22,8 @@ namespace DinoHunt.View
         [Tooltip("Vertical field of view for the perspective oversight.")]
         [SerializeField] private float fieldOfView = 38f;
 
-        [Tooltip("Fixed distance from the framed center to the camera, in world units.")]
-        [SerializeField] private float distance = 10f;
+        [Tooltip("Fixed distance from the framed center to the camera, in world units. ~110 frames the nest (radius 16), the raptors around it and arriving soldiers.")]
+        [SerializeField] private float distance = 110f;
 
         private Camera _camera;
         private Vector3 _center;

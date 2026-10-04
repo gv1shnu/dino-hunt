@@ -1,0 +1,13 @@
+<!--
+  Engine code stripping removes component classes that no scene or asset references. These
+  colliders are only added at runtime by GameObject.CreatePrimitive (ground plane, eggs,
+  fallback capsules), so without this the WebGL player logs "Can't add component because
+  class '...Collider' doesn't exist!".
+-->
+<linker>
+  <assembly fullname="UnityEngine.PhysicsModule">
+    <type fullname="UnityEngine.MeshCollider" preserve="all" />
+    <type fullname="UnityEngine.CapsuleCollider" preserve="all" />
+    <type fullname="UnityEngine.SphereCollider" preserve="all" />
+  </assembly>
+</linker>
