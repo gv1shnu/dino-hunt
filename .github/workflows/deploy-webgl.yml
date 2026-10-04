@@ -1,5 +1,5 @@
 # Builds the WebGL player on every push to master and publishes it to GitHub Pages
-# at http://www.vishnugandarapu.in/dino-hunt/ (the account's custom Pages domain).
+# at https://www.vishnugandarapu.in/dino-hunt/ (the account's custom Pages domain).
 #
 # One-time setup:
 #   - Repo Settings -> Pages -> Source: "GitHub Actions".
