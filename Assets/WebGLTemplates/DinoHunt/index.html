@@ -154,6 +154,11 @@
         }).then((unityInstance) => {
           loadingBar.style.display = "none";
           fullscreenButton.onclick = () => unityInstance.SetFullscreen(1);
+          // Tell the free-fly camera when the cursor leaves the canvas so screen-edge panning
+          // stops instead of sliding the view away while the pointer is elsewhere on the page.
+          var setPointer = (inside) => unityInstance.SendMessage("SpectatorCamera", "SetPointerInside", inside);
+          canvas.addEventListener("mouseleave", () => setPointer(0));
+          canvas.addEventListener("mouseenter", () => setPointer(1));
         }).catch((message) => {
           unityShowBanner(message, "error");
         });

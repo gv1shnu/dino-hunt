@@ -44,6 +44,16 @@ namespace DinoHunt.View
         private float _pitch;
         private bool _controlling;
 
+        // Edge panning only runs once a real pointer has moved over the view and while it is still
+        // inside it. In a WebGL build the Input System reports (0,0) — the bottom-left corner —
+        // until the first mouse move, and keeps the last position after the cursor leaves the
+        // canvas, so without this the camera drifts off the arena on its own.
+        private bool _pointerSeen;
+        private bool _pointerInside = true;
+
+        /// <summary>Called from the WebGL page (canvas mouseenter/mouseleave) via SendMessage.</summary>
+        public void SetPointerInside(int inside) => _pointerInside = inside != 0;
+
         private void Awake()
         {
             _framer = GetComponent<SpectatorCamera>();
@@ -70,11 +80,12 @@ namespace DinoHunt.View
             bool looking = mouse != null && (mouse.rightButton.isPressed || mouse.leftButton.isPressed);
             Vector2 lookDelta = looking ? mouse.delta.ReadValue() : Vector2.zero;
             float scroll = mouse != null ? mouse.scroll.ReadValue().y : 0f;
+            if (mouse != null && mouse.delta.ReadValue().sqrMagnitude > 0f) _pointerSeen = true;
 
             // Screen-edge panning: push the cursor to a screen edge to slide the view (disabled
             // while looking so a right-drag to the edge doesn't also pan).
             Vector3 edgePan = Vector3.zero;
-            if (edgePanBorder > 0f && mouse != null && !looking && Application.isFocused)
+            if (edgePanBorder > 0f && mouse != null && !looking && Application.isFocused && _pointerSeen && _pointerInside)
             {
                 Vector2 mp = mouse.position.ReadValue();
                 if (mp.x >= 0f && mp.x <= Screen.width && mp.y >= 0f && mp.y <= Screen.height)
