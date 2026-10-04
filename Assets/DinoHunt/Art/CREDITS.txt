@@ -1,0 +1,3 @@
+Character_Soldier.glb - "Character Soldier" from the Toon Shooter Game Kit by Quaternius (quaternius.com), CC0.
+Velociraptor.glb      - "Velociraptor" from the Animated Dinosaur Pack by Quaternius (quaternius.com), CC0.
+Downloaded as GLB from poly.pizza (static.poly.pizza). Imported with com.unity.cloud.gltfast.

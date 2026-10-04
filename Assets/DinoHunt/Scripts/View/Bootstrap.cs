@@ -12,8 +12,8 @@ namespace DinoHunt.View
 {
     /// <summary>
     /// Entry point for a played (rendered) match. Configures the fixed timestep, builds the
-    /// greybox, bakes the NavMesh, spawns the agent capsules, and drives the Simulation from
-    /// FixedUpdate. Each rendered frame it copies sim state onto the capsule transforms.
+    /// greybox, bakes the NavMesh, spawns the agent views (art models, or capsules as fallback), and drives the Simulation from
+    /// FixedUpdate. Each rendered frame it copies sim state onto the view transforms.
     ///
     /// Deliberately thin: it hosts and visualizes the Simulation but contains no game logic,
     /// so the exact same Simulation can be driven headless in batch mode without this class.
@@ -38,6 +38,12 @@ namespace DinoHunt.View
         [Tooltip("Tracer bullet thickness in units.")]
         [SerializeField] private float bulletThickness = 0.35f;
 
+        [Header("Art models (empty prefab = greybox capsule)")]
+        [SerializeField] private UnitModelSlot soldierModel = new UnitModelSlot();
+        [SerializeField] private UnitModelSlot raptorModel = new UnitModelSlot { moveClipSpeed = 10f };
+        [SerializeField] private Color blueTeamTint = new Color(0.25f, 0.5f, 1f);
+        [SerializeField] private Color redTeamTint = new Color(1f, 0.3f, 0.28f);
+
         [Tooltip("Seconds between commentary situation reports. Keeps the audience oriented during quiet stretches; 0 disables.")]
         [SerializeField] private float commentaryReportInterval = 20f;
 
@@ -49,6 +55,10 @@ namespace DinoHunt.View
         private readonly List<Transform> _agentGuns = new List<Transform>();
         private readonly List<Transform> _eggViews = new List<Transform>();
         private readonly List<Transform> _raptorViews = new List<Transform>();
+        private readonly List<UnitModel> _agentModels = new List<UnitModel>();
+        private readonly List<UnitModel> _raptorModels = new List<UnitModel>();
+        private readonly List<float> _lastAgentCooldown = new List<float>();
+        private readonly List<float> _lastRaptorCooldown = new List<float>();
         private static readonly Quaternion ReloadTilt = Quaternion.Euler(-78f, 0f, 0f); // gun raised while reloading
         private JsonlFileSink _logSink;
         private JsonlFileSink _snapshotSink;
@@ -83,6 +93,7 @@ namespace DinoHunt.View
             var eventSink = new MultiSink(_logSink, _narrator); // file log + live radio/commentary
             Simulation = new Simulation(config, points, new NavMeshPathfinder(), new RaycastLineOfSight(), eventSink, _snapshotSink);
             Simulation.ShotFired += OnShotFired;
+            if (soldierModel.HasModel || raptorModel.HasModel) EnsureModelLighting();
             SpawnAgentViews();
             SpawnEggViews();
             SpawnRaptorViews();
@@ -144,6 +155,11 @@ namespace DinoHunt.View
                     Quaternion target = agent.Weapon.IsReloading ? ReloadTilt : Quaternion.identity;
                     gun.localRotation = Quaternion.Slerp(gun.localRotation, target, Time.deltaTime * 10f);
                 }
+
+                // A jump in weapon cooldown means a shot was fired this frame.
+                float cd = agent.Weapon.Cooldown;
+                if (cd > _lastAgentCooldown[i] + 1e-4f) _agentModels[i]?.TriggerAction();
+                _lastAgentCooldown[i] = cd;
             }
 
             SyncEggViews();
@@ -200,6 +216,11 @@ namespace DinoHunt.View
                 view.position = raptor.Position;
                 if (raptor.Facing.sqrMagnitude > 1e-6f)
                     view.rotation = Quaternion.LookRotation(raptor.Facing);
+
+                // A jump in attack cooldown means the raptor just struck.
+                float cd = raptor.AttackCooldown;
+                if (cd > _lastRaptorCooldown[i] + 1e-4f) _raptorModels[i]?.TriggerAction();
+                _lastRaptorCooldown[i] = cd;
             }
         }
 
@@ -253,6 +274,25 @@ namespace DinoHunt.View
             surface.BuildNavMesh();
         }
 
+        /// <summary>
+        /// The greybox is unlit and the scene ships with no lights, but the art models use lit
+        /// shaders. Add a sun and a flat ambient so they don't render near-black. Cosmetic only.
+        /// </summary>
+        private static void EnsureModelLighting()
+        {
+            foreach (var l in FindObjectsByType<Light>(FindObjectsSortMode.None))
+                if (l.type == LightType.Directional) return;
+
+            var sun = new GameObject("Sun").AddComponent<Light>();
+            sun.type = LightType.Directional;
+            sun.intensity = 1.2f;
+            sun.shadows = LightShadows.Soft;
+            sun.transform.rotation = Quaternion.Euler(55f, -35f, 0f);
+
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(0.55f, 0.55f, 0.6f);
+        }
+
         private void SpawnAgentViews()
         {
             var agentsRoot = new GameObject("Agents").transform;
@@ -262,6 +302,20 @@ namespace DinoHunt.View
                 // unscaled children so the sim never has to know about visual scale.
                 var root = new GameObject($"Agent_{agent.Team}_{agent.Id}").transform;
                 root.SetParent(agentsRoot, false);
+
+                root.position = agent.Position;
+                root.rotation = Quaternion.LookRotation(agent.Facing);
+                _agentViews.Add(root);
+                _lastAgentCooldown.Add(agent.Weapon.Cooldown);
+
+                if (soldierModel.HasModel)
+                {
+                    var tint = agent.Team == Team.Blue ? blueTeamTint : redTeamTint;
+                    _agentModels.Add(UnitModel.Spawn(soldierModel, root, tint));
+                    _agentGuns.Add(null); // the model carries its own weapon
+                    continue;
+                }
+                _agentModels.Add(null);
 
                 var cap = GameObject.CreatePrimitive(PrimitiveType.Capsule);
                 cap.transform.SetParent(root, false);
@@ -281,10 +335,6 @@ namespace DinoHunt.View
                 float s = agentVisualScale;
                 gun.transform.localScale = new Vector3(0.22f * s, 0.22f * s, 1.1f * s);
                 gun.transform.localPosition = new Vector3(0.45f * s, 1.0f * s, 0.7f * s);
-
-                root.position = agent.Position;
-                root.rotation = Quaternion.LookRotation(agent.Facing);
-                _agentViews.Add(root);
                 _agentGuns.Add(gun.transform);
             }
         }
@@ -302,6 +352,17 @@ namespace DinoHunt.View
             {
                 var root = new GameObject($"Raptor_{raptor.Id}").transform;
                 root.SetParent(raptorsRoot, false);
+                root.position = raptor.Position;
+                root.rotation = Quaternion.LookRotation(raptor.Facing);
+                _raptorViews.Add(root);
+                _lastRaptorCooldown.Add(raptor.AttackCooldown);
+
+                if (raptorModel.HasModel)
+                {
+                    _raptorModels.Add(UnitModel.Spawn(raptorModel, root, null)); // raptors keep their own colors
+                    continue;
+                }
+                _raptorModels.Add(null);
 
                 var cap = GameObject.CreatePrimitive(PrimitiveType.Capsule);
                 cap.transform.SetParent(root, false);
@@ -309,10 +370,6 @@ namespace DinoHunt.View
                 Destroy(cap.GetComponent<Collider>());
                 cap.transform.localScale = Vector3.one * raptorVisualScale;
                 cap.transform.localPosition = Vector3.up * raptorVisualScale;
-
-                root.position = raptor.Position;
-                root.rotation = Quaternion.LookRotation(raptor.Facing);
-                _raptorViews.Add(root);
             }
         }
 

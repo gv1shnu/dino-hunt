@@ -298,6 +298,41 @@ MonoBehaviour:
   raptorVisualScale: 10.8
   bulletSpeed: 160
   bulletThickness: 0.35
+  soldierModel:
+    prefab: {fileID: 2242888416370347441, guid: 1cd38d2b488464b40b60a9f4619175fc, type: 3}
+    scale: 6.697554
+    yawOffset: 0
+    idle: {fileID: -6736537688726264772, guid: 1cd38d2b488464b40b60a9f4619175fc, type: 3}
+    move: {fileID: 9081044715818366475, guid: 1cd38d2b488464b40b60a9f4619175fc, type: 3}
+    action: {fileID: -7681753392555605996, guid: 1cd38d2b488464b40b60a9f4619175fc, type: 3}
+    moveClipSpeed: 20
+    tintMaterialFilter: Character_Main
+    hideNodes:
+    - Revolver
+    - Sniper
+    - Revolver_Small
+    - Pistol
+    - SMG
+    - GrenadeLauncher
+    - ShortCannon
+    - Shotgun
+    - Sniper_2
+    - RocketLauncher
+    - Shovel
+    - Knife_1
+    - Knife_2
+  raptorModel:
+    prefab: {fileID: 2242888416370347441, guid: 51247e8522cdc450da04667ac369b66e, type: 3}
+    scale: 1.8374275
+    yawOffset: 0
+    idle: {fileID: 5009914775517631136, guid: 51247e8522cdc450da04667ac369b66e, type: 3}
+    move: {fileID: -63480417914257500, guid: 51247e8522cdc450da04667ac369b66e, type: 3}
+    action: {fileID: -1363431607778942750, guid: 51247e8522cdc450da04667ac369b66e, type: 3}
+    moveClipSpeed: 30
+    tintMaterialFilter: 
+    hideNodes: []
+  blueTeamTint: {r: 0.25, g: 0.5, b: 1, a: 1}
+  redTeamTint: {r: 1, g: 0.3, b: 0.28, a: 1}
   commentaryReportInterval: 20
 --- !u!4 &1218930709
 Transform:
