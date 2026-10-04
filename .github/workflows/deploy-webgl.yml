@@ -62,6 +62,8 @@ jobs:
           targetPlatform: WebGL
           buildName: DinoHunt
           versioning: None
+          # Pinned: resolving "latest" calls the GitHub API unauthenticated and can hit a 403 rate limit.
+          cliVersion: v0.1.72
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
